@@ -2,12 +2,24 @@ name: Schedule Probe
 
 on:
   schedule:
-    - cron: "27 8 * * *"
+    - cron: "43 8 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Stamp
-        run: echo "PROBE FIRED at $(date -u)"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mark run in commit
+        run: |
+          git config user.name "schedule-probe"
+          git config user.email "schedule-probe@users.noreply.github.com"
+          date -u > last-run.txt
+          git add last-run.txt
+          git commit -m "probe fired at $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "no change"
+          git push || echo "push skipped"
